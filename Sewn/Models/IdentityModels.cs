@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
+using System.Collections.Generic;
+using System.Data.Entity;
 
 namespace Sewn.Models
 {
@@ -16,6 +18,9 @@ namespace Sewn.Models
             // Add custom user claims here
             return userIdentity;
         }
+
+        public virtual LocationModel Location { get; set; }
+        public virtual IList<string> FriendsIds { get; set; }
     }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
