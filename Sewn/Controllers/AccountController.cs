@@ -175,7 +175,7 @@ namespace Sewn.Controllers
             {
                 return Ok();
             }
-            // If we got this far, something failed, redisplay form
+            // If we got this far, something failed, send bad request to caller
             ModelState.AddModelError("", "Failed to verify phone");
             return BadRequest(ModelState);
         }
