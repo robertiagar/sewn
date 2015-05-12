@@ -40,4 +40,17 @@ namespace Sewn.Models
 
         public string ProviderKey { get; set; }
     }
+
+    public class AddPhoneNumberViewModel
+    {
+        public string Number { get; set; }
+    }
+
+    public class VerifyPhoneNumberViewModel
+    {
+
+        public string PhoneNumber { get; set; }
+
+        public string Code { get; set; }
+    }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Sewn.Models;
+using Sewn.Services;
 
 namespace Sewn
 {
@@ -34,6 +35,15 @@ namespace Sewn
                 RequireLowercase = true,
                 RequireUppercase = true,
             };
+
+            manager.RegisterTwoFactorProvider("PhoneCode", new PhoneNumberTokenProvider<ApplicationUser>
+            {
+                MessageFormat = "Your security code is: {0}"
+            });
+
+            manager.SmsService = new SmsService();
+
+
             var dataProtectionProvider = options.DataProtectionProvider;
             if (dataProtectionProvider != null)
             {
