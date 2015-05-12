@@ -162,8 +162,8 @@ namespace Sewn.Controllers
             return InternalServerError();
         }
 
-        // POST api/Account/VerifiyPhoneNumber
-        [Route("VerifiyPhoneNumber")]
+        // POST api/Account/VerifyPhoneNumber
+        [Route("VerifyPhoneNumber")]
         public async Task<IHttpActionResult> VerifyPhoneNumber(VerifyPhoneNumberViewModel model)
         {
             if (!ModelState.IsValid)
