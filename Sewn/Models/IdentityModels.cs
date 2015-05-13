@@ -21,6 +21,11 @@ namespace Sewn.Models
 
         public virtual LocationModel Location { get; set; }
         public virtual IList<string> FriendsIds { get; set; }
+
+        public ApplicationUser()
+        {
+            Location = new LocationModel();
+            FriendsIds = new List<string>();
     }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>

@@ -143,8 +143,7 @@ namespace Sewn.Controllers
                 return BadRequest(ModelState);
             }
             // Generate the token and send it
-            var code = await UserManager.GenerateChangePhoneNumberTokenAsync(
-               User.Identity.GetUserId(), model.Number);
+            var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), model.Number);
 
             if (UserManager.SmsService != null)
             {
