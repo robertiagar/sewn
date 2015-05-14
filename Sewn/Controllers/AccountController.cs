@@ -19,7 +19,7 @@ using Sewn.Results;
 
 namespace Sewn.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="")]
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {

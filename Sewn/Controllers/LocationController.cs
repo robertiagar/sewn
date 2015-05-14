@@ -36,7 +36,7 @@ namespace Sewn.Controllers
             this.UserManager = userManager;
         }
 
-        public async void Post([FromBody]LocationModel value)
+        public async void Post([FromBody]Location value)
         {
             var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
@@ -49,17 +49,9 @@ namespace Sewn.Controllers
         {
             var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
-            var users = await UserManager.Users.Where(u => user.FriendsIds.Contains(u.Id)).ToListAsync();
+            var users = await UserManager.Users.Where(u => u.Friends.Any(f => f.Id == u.Id)).ToListAsync();
 
             return users;
-        }
-
-        [Route("GetUser")]
-        public async Task<ApplicationUser> GetUser()
-        {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
-
-            return user;
         }
 
         public ApplicationUserManager UserManager
@@ -72,6 +64,17 @@ namespace Sewn.Controllers
             {
                 _userManager = value;
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _userManager != null)
+            {
+                _userManager.Dispose();
+                _userManager = null;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

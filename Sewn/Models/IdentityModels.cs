@@ -19,13 +19,14 @@ namespace Sewn.Models
             return userIdentity;
         }
 
-        public virtual LocationModel Location { get; set; }
-        public virtual IList<string> FriendsIds { get; set; }
+        public virtual Location Location { get; set; }
+        public virtual IList<Friend> Friends { get; set; }
 
         public ApplicationUser()
         {
-            Location = new LocationModel();
-            FriendsIds = new List<string>();
+            Location = new Location();
+            Friends = new List<Friend>();
+        }
     }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
