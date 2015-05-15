@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,64 +13,70 @@ using Sewn.Models;
 namespace Sewn.Controllers
 {
     [Authorize]
-    public class FriendsController : ApiController
+    public class FriendsController : BaseApiController
     {
-        private ApplicationUserManager _userManager;
-
-        public FriendsController()
-        {
-        }
-
-        public FriendsController(ApplicationUserManager userManager)
-        {
-            UserManager = userManager;
-        }
-
         public async Task<IHttpActionResult> AddFriend(string id)
         {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
-            var friendToAdd = await UserManager.FindByIdAsync(id);
+            var user = await UserManager.FindByIdAsync(UserId);
+            var friend = await UserManager.FindByIdAsync(id);
 
-            var friend = new Friend
+            var friendship = new Friendship
             {
-                Id = friendToAdd.Id
+                User1 = user,
+                UserId1 = user.Id,
+                User2 = friend,
+                UserId2 = friend.Id
             };
 
-            user.Friends.Add(friend);
+            DbContext.Friendships.Add(friendship);
 
-            var result = await (UserManager.UpdateAsync(user));
-            if (result.Succeeded)
+            var result = await DbContext.SaveChangesAsync();
+
+            if (result != 0)
             {
                 return Ok();
             }
             else
             {
-                var errors = string.Join(Environment.NewLine, result.Errors);
-                return BadRequest(errors);
+                return BadRequest();
             }
         }
 
-        public ApplicationUserManager UserManager
+        public async Task<IHttpActionResult> AcceptFriend(string id)
         {
-            get
-            {
-                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
+            var user = UserManager.FindById(UserId);
+            var friend = UserManager.FindById(id);
+            var friendship = await DbContext.Friendships.Where(f => f.UserId1 == friend.Id && f.UserId2 == user.Id).SingleOrDefaultAsync();
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && _userManager != null)
+            friendship.Status = Status.Accepted;
+            friendship.Updated = DateTime.Now;
+
+            var saved = await DbContext.SaveChangesAsync();
+
+            if (saved != 0)
             {
-                _userManager.Dispose();
-                _userManager = null;
+                user.Friends.Add(friend);
+                friend.Friends.Add(user);
+
+                //TODO: this is bad code
+                var tasks = new List<Task<IdentityResult>>();
+                tasks.Add(UserManager.UpdateAsync(user));
+                tasks.Add(UserManager.UpdateAsync(friend));
+
+                var results = await Task.WhenAll(tasks);
+                foreach (var result in results)
+                {
+                    if (!result.Succeeded)
+                    {
+                        return BadRequest(string.Join(System.Environment.NewLine, result.Errors)); //TODO: this returns on first error. Rollback measures must be taken and implemented.
+                    }
+                }
+
+                //i'll be surprised if we get here on the first try
+                return Ok();
             }
 
-            base.Dispose(disposing);
+            return BadRequest();
         }
     }
 }

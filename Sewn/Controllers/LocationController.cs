@@ -49,9 +49,9 @@ namespace Sewn.Controllers
         {
             var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
-            var users = await UserManager.Users.Where(u => u.Friends.Any(f => f.Id == u.Id)).ToListAsync();
+            //var users = await UserManager.Users.Where(u => u.Friends.Any(f => f.Id == u.Id)).ToListAsync();
 
-            return users;
+            return null;
         }
 
         public ApplicationUserManager UserManager

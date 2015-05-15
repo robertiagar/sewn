@@ -20,12 +20,12 @@ namespace Sewn.Models
         }
 
         public virtual Location Location { get; set; }
-        public virtual IList<Friend> Friends { get; set; }
+        public virtual IList<ApplicationUser> Friends { get; set; }
 
         public ApplicationUser()
         {
             Location = new Location();
-            Friends = new List<Friend>();
+            Friends = new List<ApplicationUser>();
         }
     }
 
@@ -39,6 +39,20 @@ namespace Sewn.Models
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();
+        }
+
+        public DbSet<Friendship> Friendships { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Friendship>().HasKey(f => new { f.UserId1, f.UserId2 });
+            modelBuilder.Entity<Friendship>().HasRequired(f => f.User1)
+                .WithMany()
+                .HasForeignKey(f => f.UserId1);
+            modelBuilder.Entity<Friendship>().HasRequired(f => f.User2)
+                .WithMany()
+                .HasForeignKey(f => f.UserId2)
+                .WillCascadeOnDelete(false);
         }
     }
 }
