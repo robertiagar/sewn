@@ -10,12 +10,16 @@ using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
 using Sewn.Models;
 using Sewn.Infrastructure;
+using System.Collections;
+using AutoMapper;
 
 namespace Sewn.Controllers
 {
     [Authorize]
+    [RoutePrefix("api/Friends")]
     public class FriendsController : BaseApiController
     {
+        [Route("addfriend")]
         public async Task<IHttpActionResult> AddFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
@@ -43,6 +47,7 @@ namespace Sewn.Controllers
             }
         }
 
+        [Route("acceptfriend")]
         public async Task<IHttpActionResult> AcceptFriend(string id)
         {
             var user = UserManager.FindById(UserId);
@@ -60,11 +65,10 @@ namespace Sewn.Controllers
                 friend.Friends.Add(user);
 
                 //TODO: this is bad code
-                var tasks = new List<Task<IdentityResult>>();
-                tasks.Add(UserManager.UpdateAsync(user));
-                tasks.Add(UserManager.UpdateAsync(friend));
+                var results = new List<IdentityResult>();
+                results.Add(await UserManager.UpdateAsync(user));
+                results.Add(await UserManager.UpdateAsync(friend));
 
-                var results = await Task.WhenAll(tasks);
                 foreach (var result in results)
                 {
                     if (!result.Succeeded)
@@ -80,6 +84,7 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
+        [Route("blockfriend")]
         public async Task<IHttpActionResult> BlockFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
@@ -103,6 +108,7 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
+        [Route("spamfriend")]
         public async Task<IHttpActionResult> SpamFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
@@ -126,6 +132,7 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
+        [Route("reverttofriend")]
         public async Task<IHttpActionResult> RevertToFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
@@ -147,6 +154,27 @@ namespace Sewn.Controllers
             }
 
             return BadRequest();
+        }
+
+        public async Task<UserViewModel> GetFriends()
+        {
+            var friends = await (from friend in DbContext.Users
+                                 from friendship in DbContext.Friendships
+                                 where (friendship.User1.Id == UserId || friendship.User2.Id == UserId)
+                                 select friend).Distinct().ToListAsync();
+
+            var user = await UserManager.FindByIdAsync(UserId);
+
+            var selfs = friends.Where(x => x.Id == UserId);
+
+            foreach (var self in selfs.ToList())
+                friends.Remove(self);
+
+            var userResult = Mapper.Map<UserViewModel>(user);
+
+            userResult.Friends = Mapper.Map<IEnumerable<UserViewModel>>(friends);
+
+            return userResult;
         }
     }
 }

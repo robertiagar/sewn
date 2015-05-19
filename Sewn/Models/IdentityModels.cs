@@ -53,6 +53,10 @@ namespace Sewn.Models
                 .WithMany()
                 .HasForeignKey(f => f.UserId2)
                 .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<ApplicationUser>().HasKey(u => u.Id);
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

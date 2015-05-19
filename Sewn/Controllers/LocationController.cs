@@ -18,31 +18,21 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
+using Sewn.Infrastructure;
 
 namespace Sewn.Controllers
 {
     [Authorize]
     [RoutePrefix("api/Location")]
-    public class LocationController : ApiController
+    public class LocationController : BaseApiController
     {
-        private ApplicationUserManager _userManager;
-
-        public LocationController()
-        {
-        }
-
-        public LocationController(ApplicationUserManager userManager)
-        {
-            this.UserManager = userManager;
-        }
-
         public async void Post([FromBody]Location value)
         {
             var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
             user.Location = value;
 
-            await _userManager.UpdateAsync(user);
+            await UserManager.UpdateAsync(user);
         }
 
         public async Task<IEnumerable<ApplicationUser>> Get()
@@ -52,29 +42,6 @@ namespace Sewn.Controllers
             //var users = await UserManager.Users.Where(u => u.Friends.Any(f => f.Id == u.Id)).ToListAsync();
 
             return null;
-        }
-
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && _userManager != null)
-            {
-                _userManager.Dispose();
-                _userManager = null;
-            }
-
-            base.Dispose(disposing);
         }
     }
 }
