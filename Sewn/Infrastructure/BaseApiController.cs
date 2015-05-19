@@ -7,7 +7,7 @@ using System.Web.Http;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
 
-namespace Sewn
+namespace Sewn.Infrastructure
 {
     public class BaseApiController : ApiController
     {
@@ -56,6 +56,11 @@ namespace Sewn
             {
                 _userManager.Dispose();
                 _userManager = null;
+            }
+            if (disposing && _dbContext != null)
+            {
+                _dbContext.Dispose();
+                _dbContext = null;
             }
 
             base.Dispose(disposing);

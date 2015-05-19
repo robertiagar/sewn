@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
 using Sewn.Models;
+using Sewn.Infrastructure;
 
 namespace Sewn.Controllers
 {
@@ -73,6 +74,75 @@ namespace Sewn.Controllers
                 }
 
                 //i'll be surprised if we get here on the first try
+                return Ok();
+            }
+
+            return BadRequest();
+        }
+
+        public async Task<IHttpActionResult> BlockFriend(string id)
+        {
+            var user = await UserManager.FindByIdAsync(UserId);
+            var friend = await UserManager.FindByIdAsync(id);
+
+            var friendship = await (from friendshp in DbContext.Friendships
+                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
+                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    select friendshp).SingleOrDefaultAsync();
+
+            friendship.Status = Status.Blocked;
+            friendship.Updated = DateTime.Now;
+
+            var result = await DbContext.SaveChangesAsync();
+
+            if (result != 0)
+            {
+                return Ok();
+            }
+
+            return BadRequest();
+        }
+
+        public async Task<IHttpActionResult> SpamFriend(string id)
+        {
+            var user = await UserManager.FindByIdAsync(UserId);
+            var friend = await UserManager.FindByIdAsync(id);
+
+            var friendship = await (from friendshp in DbContext.Friendships
+                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
+                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    select friendshp).SingleOrDefaultAsync();
+
+            friendship.Status = Status.Spam;
+            friendship.Updated = DateTime.Now;
+
+            var result = await DbContext.SaveChangesAsync();
+
+            if (result != 0)
+            {
+                return Ok();
+            }
+
+            return BadRequest();
+        }
+
+        public async Task<IHttpActionResult> RevertToFriend(string id)
+        {
+            var user = await UserManager.FindByIdAsync(UserId);
+            var friend = await UserManager.FindByIdAsync(id);
+
+            var friendship = await (from friendshp in DbContext.Friendships
+                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
+                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    select friendshp).SingleOrDefaultAsync();
+
+            friendship.Status = Status.Accepted;
+            friendship.Updated = DateTime.Now;
+
+            var result = await DbContext.SaveChangesAsync();
+
+            if (result != 0)
+            {
                 return Ok();
             }
 
