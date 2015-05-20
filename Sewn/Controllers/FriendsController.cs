@@ -184,7 +184,8 @@ namespace Sewn.Controllers
             return userResult;
         }
 
-        public async Task<IEnumerable<UserViewModel>> FindFriends(IList<FindPhoneViewModel> phoneNumbers)
+        [Route("FindFriends")]
+        public async Task<IEnumerable<UserViewModel>> FindFriends(IEnumerable<FindPhoneModel> phoneNumbers)
         {
             var phoneUtil = PhoneNumberUtil.GetInstance();
 

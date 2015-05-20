@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Globalization;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -48,6 +49,7 @@ namespace Sewn.Clients
             var store = await ContactStore.CreateOrOpenAsync(ContactStoreSystemAccessMode.ReadWrite, ContactStoreApplicationAccessMode.ReadOnly);
             var phoneStore = await Windows.ApplicationModel.Contacts.ContactManager.RequestStoreAsync();
             var contacts = await phoneStore.FindContactsAsync("+40745901401");
+            var countrycode = new RegionInfo(contacts[0].Addresses[0].Country);
             var contact = new StoredContact(store);
             contact.RemoteId = "4343";
             contact.GivenName = "test";
