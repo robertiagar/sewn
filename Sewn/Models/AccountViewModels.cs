@@ -43,6 +43,8 @@ namespace Sewn.Models
 
     public class AddPhoneNumberViewModel
     {
+        public string Country { get; set; }
+
         public string Number { get; set; }
     }
 

@@ -16,10 +16,11 @@ using Microsoft.Owin.Security.OAuth;
 using Sewn.Models;
 using Sewn.Providers;
 using Sewn.Results;
+using PhoneNumbers;
 
 namespace Sewn.Controllers
 {
-    [Authorize(Roles="")]
+    [Authorize]
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
@@ -135,6 +136,11 @@ namespace Sewn.Controllers
         }
 
         // POST api/Account/AddPhoneNumber
+        /// <summary>
+        /// Starts the phone verification process.
+        /// </summary>
+        /// <param name="model">The <see cref="AddPhoneNumberViewModel"/> number.</param>
+        /// <returns>An HTTP 200 status code along with a server-side formatted phone number.</returns>
         [Route("AddPhoneNumber")]
         public async Task<IHttpActionResult> AddPhoneNumber(AddPhoneNumberViewModel model)
         {
@@ -142,6 +148,10 @@ namespace Sewn.Controllers
             {
                 return BadRequest(ModelState);
             }
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+            var phonenumber = phoneUtil.Parse(model.Number, model.Country);
+            model.Number = phoneUtil.Format(phonenumber, PhoneNumberFormat.E164);
+
             // Generate the token and send it
             var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), model.Number);
 
@@ -154,7 +164,7 @@ namespace Sewn.Controllers
                 };
                 await UserManager.SmsService.SendAsync(message);
 
-                return Ok();
+                return Ok(model.Number);
             }
 
             //this should never happen
@@ -169,6 +179,19 @@ namespace Sewn.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            var builder= new PhoneNumber.Builder();
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+            builder.RawInput = model.PhoneNumber;
+            builder.CountryCodeSource = PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN;
+            var number = builder.Build();
+
+            if (!phoneUtil.IsValidNumber(number))
+            {
+                ModelState.AddModelError("PhoneNumber", "Phone number is in wrong format. Please use E164 format.");
+                return BadRequest(ModelState);
+            }
+
             var result = await UserManager.ChangePhoneNumberAsync(User.Identity.GetUserId(), model.PhoneNumber, model.Code);
             if (result.Succeeded)
             {

@@ -7,10 +7,10 @@ namespace Sewn.Models
 {
     public class Friendship
     {
-        public virtual ApplicationUser User1 { get; set; }
-        public virtual ApplicationUser User2 { get; set; }
-        public virtual string UserId1 { get; set; }
-        public virtual string UserId2 { get; set; }
+        public virtual ApplicationUser Requester { get; set; }
+        public virtual ApplicationUser Accepter { get; set; }
+        public virtual string RequesterId { get; set; }
+        public virtual string AccepterId { get; set; }
         public DateTime Added { get; set; }
         public DateTime Updated { get; set; }
         public Status Status { get; set; }

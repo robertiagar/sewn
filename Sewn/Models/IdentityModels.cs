@@ -5,6 +5,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System;
 
 namespace Sewn.Models
 {
@@ -45,13 +46,13 @@ namespace Sewn.Models
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Friendship>().HasKey(f => new { f.UserId1, f.UserId2 });
-            modelBuilder.Entity<Friendship>().HasRequired(f => f.User1)
+            modelBuilder.Entity<Friendship>().HasKey(f => new { RequesterId = f.RequesterId, AccepterId = f.AccepterId });
+            modelBuilder.Entity<Friendship>().HasRequired(f => f.Requester)
                 .WithMany()
-                .HasForeignKey(f => f.UserId1);
-            modelBuilder.Entity<Friendship>().HasRequired(f => f.User2)
+                .HasForeignKey(f => f.RequesterId);
+            modelBuilder.Entity<Friendship>().HasRequired(f => f.Accepter)
                 .WithMany()
-                .HasForeignKey(f => f.UserId2)
+                .HasForeignKey(f => f.AccepterId)
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<ApplicationUser>().HasKey(u => u.Id);

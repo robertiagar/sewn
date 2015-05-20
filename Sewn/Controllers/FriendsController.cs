@@ -12,6 +12,7 @@ using Sewn.Models;
 using Sewn.Infrastructure;
 using System.Collections;
 using AutoMapper;
+using PhoneNumbers;
 
 namespace Sewn.Controllers
 {
@@ -19,7 +20,7 @@ namespace Sewn.Controllers
     [RoutePrefix("api/Friends")]
     public class FriendsController : BaseApiController
     {
-        [Route("addfriend")]
+        [Route("AddFriend")]
         public async Task<IHttpActionResult> AddFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
@@ -27,10 +28,10 @@ namespace Sewn.Controllers
 
             var friendship = new Friendship
             {
-                User1 = user,
-                UserId1 = user.Id,
-                User2 = friend,
-                UserId2 = friend.Id
+                Requester = user,
+                RequesterId = user.Id,
+                Accepter = friend,
+                AccepterId = friend.Id
             };
 
             DbContext.Friendships.Add(friendship);
@@ -47,12 +48,12 @@ namespace Sewn.Controllers
             }
         }
 
-        [Route("acceptfriend")]
+        [Route("AcceptFriend")]
         public async Task<IHttpActionResult> AcceptFriend(string id)
         {
             var user = UserManager.FindById(UserId);
             var friend = UserManager.FindById(id);
-            var friendship = await DbContext.Friendships.Where(f => f.UserId1 == friend.Id && f.UserId2 == user.Id).SingleOrDefaultAsync();
+            var friendship = await DbContext.Friendships.Where(f => f.RequesterId == friend.Id && f.AccepterId == user.Id).SingleOrDefaultAsync();
 
             friendship.Status = Status.Accepted;
             friendship.Updated = DateTime.Now;
@@ -84,15 +85,15 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
-        [Route("blockfriend")]
+        [Route("BlockFriend")]
         public async Task<IHttpActionResult> BlockFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
             var friend = await UserManager.FindByIdAsync(id);
 
             var friendship = await (from friendshp in DbContext.Friendships
-                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
-                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    where (friendshp.Requester.Id == user.Id || friendshp.Accepter.Id == user.Id) &&
+                                    (friendshp.Requester.Id == friend.Id || friendshp.Accepter.Id == friend.Id)
                                     select friendshp).SingleOrDefaultAsync();
 
             friendship.Status = Status.Blocked;
@@ -108,15 +109,15 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
-        [Route("spamfriend")]
+        [Route("SpamFriend")]
         public async Task<IHttpActionResult> SpamFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
             var friend = await UserManager.FindByIdAsync(id);
 
             var friendship = await (from friendshp in DbContext.Friendships
-                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
-                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    where (friendshp.Requester.Id == user.Id || friendshp.Accepter.Id == user.Id) &&
+                                    (friendshp.Requester.Id == friend.Id || friendshp.Accepter.Id == friend.Id)
                                     select friendshp).SingleOrDefaultAsync();
 
             friendship.Status = Status.Spam;
@@ -132,15 +133,15 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
-        [Route("reverttofriend")]
+        [Route("RevertToFriend")]
         public async Task<IHttpActionResult> RevertToFriend(string id)
         {
             var user = await UserManager.FindByIdAsync(UserId);
             var friend = await UserManager.FindByIdAsync(id);
 
             var friendship = await (from friendshp in DbContext.Friendships
-                                    where (friendshp.User1.Id == user.Id || friendshp.User2.Id == user.Id) &&
-                                    (friendshp.User1.Id == friend.Id || friendshp.User2.Id == friend.Id)
+                                    where (friendshp.Requester.Id == user.Id || friendshp.Accepter.Id == user.Id) &&
+                                    (friendshp.Requester.Id == friend.Id || friendshp.Accepter.Id == friend.Id)
                                     select friendshp).SingleOrDefaultAsync();
 
             friendship.Status = Status.Accepted;
@@ -158,23 +159,54 @@ namespace Sewn.Controllers
 
         public async Task<UserViewModel> GetFriends()
         {
-            var friends = await (from friend in DbContext.Users
-                                 from friendship in DbContext.Friendships
-                                 where (friendship.User1.Id == UserId || friendship.User2.Id == UserId)
-                                 select friend).Distinct().ToListAsync();
+            //var friends = await (from friend in DbContext.Users
+            //                     from friendship in DbContext.Friendships
+            //                     where (friendship.User1.Id == UserId || friendship.User2.Id == UserId)
+            //                     select friend).Distinct().ToListAsync();
+
+            //var user = await UserManager.FindByIdAsync(UserId);
+
+            //var selfs = friends.Where(x => x.Id == UserId);
+
+            //foreach (var self in selfs.ToList())
+            //    friends.Remove(self);
+
+            //var userResult = Mapper.Map<UserViewModel>(user);
+
+            //userResult.Friends = Mapper.Map<IEnumerable<UserViewModel>>(friends);
 
             var user = await UserManager.FindByIdAsync(UserId);
 
-            var selfs = friends.Where(x => x.Id == UserId);
-
-            foreach (var self in selfs.ToList())
-                friends.Remove(self);
-
             var userResult = Mapper.Map<UserViewModel>(user);
 
-            userResult.Friends = Mapper.Map<IEnumerable<UserViewModel>>(friends);
+            userResult.Friends = Mapper.Map<IEnumerable<UserViewModel>>(user.Friends);
 
             return userResult;
+        }
+
+        public async Task<IEnumerable<UserViewModel>> FindFriends(IList<FindPhoneViewModel> phoneNumbers)
+        {
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+
+            foreach (var phone in phoneNumbers)
+            {
+                int i = 0;
+                foreach (var number in phone.PhoneNumbers.ToList())
+                {
+                    var phonenumber = phoneUtil.Parse(number, phone.Country);
+                    phone.PhoneNumbers[i] = phoneUtil.Format(phonenumber, PhoneNumberFormat.E164);
+                    i++;
+                }
+            }
+
+            var users = await (from u in DbContext.Users
+                               from p in phoneNumbers
+                               where p.PhoneNumbers.Contains(u.PhoneNumber)
+                               select u).Distinct().ToListAsync();
+
+            var result = Mapper.Map<IEnumerable<UserViewModel>>(users);
+
+            return result;
         }
     }
 }
