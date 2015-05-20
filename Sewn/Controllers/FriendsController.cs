@@ -48,6 +48,38 @@ namespace Sewn.Controllers
             }
         }
 
+        [Route("AddFriends")]
+        public async Task<IHttpActionResult> AddFriends(string[] ids)
+        {
+            var user = await UserManager.FindByIdAsync(UserId);
+
+            foreach (var id in ids)
+            {
+                var friend = await UserManager.FindByIdAsync(id);
+
+                var friendship = new Friendship
+                {
+                    Requester = user,
+                    RequesterId = user.Id,
+                    Accepter = friend,
+                    AccepterId = friend.Id
+                };
+
+                DbContext.Friendships.Add(friendship);
+            }
+
+            var result = await DbContext.SaveChangesAsync();
+
+            if (result != 0)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
         [Route("AcceptFriend")]
         public async Task<IHttpActionResult> AcceptFriend(string id)
         {
