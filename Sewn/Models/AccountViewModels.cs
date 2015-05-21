@@ -53,6 +53,8 @@ namespace Sewn.Models
 
         public string PhoneNumber { get; set; }
 
+        public string Country { get; set; }
+
         public string Code { get; set; }
     }
 }

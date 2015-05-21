@@ -12,6 +12,7 @@ namespace Sewn
         public static void RegisterAutomapper()
         {
             Mapper.CreateMap<ApplicationUser, UserViewModel>().ForMember(x => x.Friends, opt => opt.Ignore());
+            Mapper.CreateMap<ContactModel, ContactMatchModel>().ForMember(x => x.PossibleMatches, opt => opt.Ignore());
         }
     }
 }

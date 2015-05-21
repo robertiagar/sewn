@@ -1,25 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
 namespace Sewn.Models
 {
-    public class FindPhoneViewModel
+    public class FindPhonesModel
     {
-        public IList<ContactMatchModel> Contacts { get; set; }
+        public IList<ContactModel> Contacts { get; set; }
     }
 
-    public class ContactMatchModel
+    public class ContactModel
     {
+        [Required]
         public string FirstName { get; set; }
 
+        [Required]
         public string LastName { get; set; }
 
+        [Required]
         public string Country { get; set; }
 
+        [Required]
         public IList<string> PhoneNumbers { get; set; }
-
-        public IList<UserViewModel> PossibleMatches { get; set; }
     }
 }

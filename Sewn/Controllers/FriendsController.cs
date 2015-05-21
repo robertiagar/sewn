@@ -189,6 +189,44 @@ namespace Sewn.Controllers
             return BadRequest();
         }
 
+        [Route("FindFriends")]
+        public async Task<FindPhoneViewModel> FindFriends([FromBody]FindPhonesModel phoneNumbers)
+        {
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+
+            foreach (var contact in phoneNumbers.Contacts)
+            {
+                int i = 0;
+                foreach (var number in contact.PhoneNumbers.ToList())
+                {
+                    var phonenumber = phoneUtil.Parse(number, contact.Country);
+                    contact.PhoneNumbers[i] = phoneUtil.Format(phonenumber, PhoneNumberFormat.E164);
+                    i++;
+                }
+            }
+
+            var numbers = from contact in phoneNumbers.Contacts
+                          from phone in contact.PhoneNumbers
+                          select phone;
+
+            var users = await (from user in DbContext.Users
+                               where numbers.Contains(user.PhoneNumber)
+                               select user).Distinct().ToListAsync();
+
+            var userViewModels = Mapper.Map<IEnumerable<UserViewModel>>(users);
+
+            var result = new FindPhoneViewModel();
+
+            result.Contacts = Mapper.Map<IList<ContactMatchModel>>(phoneNumbers.Contacts);
+
+            foreach (var contact in result.Contacts)
+            {
+                contact.PossibleMatches = userViewModels.Where(u => contact.PhoneNumbers.Contains(u.PhoneNumber)).ToList();
+            }
+
+            return result;
+        }
+
         public async Task<UserViewModel> GetFriends()
         {
             //var friends = await (from friend in DbContext.Users
@@ -214,32 +252,6 @@ namespace Sewn.Controllers
             userResult.Friends = Mapper.Map<IEnumerable<UserViewModel>>(user.Friends);
 
             return userResult;
-        }
-
-        [Route("FindFriends")]
-        public async Task<IEnumerable<UserViewModel>> FindFriends(IEnumerable<FindPhoneModel> phoneNumbers)
-        {
-            var phoneUtil = PhoneNumberUtil.GetInstance();
-
-            foreach (var phone in phoneNumbers)
-            {
-                int i = 0;
-                foreach (var number in phone.PhoneNumbers.ToList())
-                {
-                    var phonenumber = phoneUtil.Parse(number, phone.Country);
-                    phone.PhoneNumbers[i] = phoneUtil.Format(phonenumber, PhoneNumberFormat.E164);
-                    i++;
-                }
-            }
-
-            var users = await (from u in DbContext.Users
-                               from p in phoneNumbers
-                               where p.PhoneNumbers.Contains(u.PhoneNumber)
-                               select u).Distinct().ToListAsync();
-
-            var result = Mapper.Map<IEnumerable<UserViewModel>>(users);
-
-            return result;
         }
     }
 }

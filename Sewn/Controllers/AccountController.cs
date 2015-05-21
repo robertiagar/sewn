@@ -179,14 +179,10 @@ namespace Sewn.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            var builder= new PhoneNumber.Builder();
             var phoneUtil = PhoneNumberUtil.GetInstance();
-            builder.RawInput = model.PhoneNumber;
-            builder.CountryCodeSource = PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN;
-            var number = builder.Build();
+            var phonenumber = phoneUtil.Parse(model.PhoneNumber, model.Country);
 
-            if (!phoneUtil.IsValidNumber(number))
+            if (!phoneUtil.IsValidNumber(phonenumber))
             {
                 ModelState.AddModelError("PhoneNumber", "Phone number is in wrong format. Please use E164 format.");
                 return BadRequest(ModelState);
