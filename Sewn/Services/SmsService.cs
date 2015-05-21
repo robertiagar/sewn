@@ -26,8 +26,8 @@ namespace Sewn.Services
 
     public static class Keys
     {
-        public static string TwilioSid = "string";
-        public static string TwilioToken = "token";
-        public static string FromPhone = "phone";
+        public static string TwilioSid = "AC2be51c0912f880b738215d1f9d9dc38b";
+        public static string TwilioToken = "0ef30e5e6f73c43673aada4e3b532591";
+        public static string FromPhone = "+1 415-599-2671";
     }
 }
